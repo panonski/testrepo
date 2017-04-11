@@ -113,8 +113,8 @@ The billing group ID designates which funding resource to charge for the analyse
  BillingGroupList billingGroups = user.getBillingGroups();
  firstBillingGroup = billingGroups.iterator().next().getId();
 
-Now you can create a new project. Remember that the project will be assigned an ID which consists of your username and the project’s shortname, which is created from the name you gave it through setName() (e.g. “rfranklin/new-test-project”).  The human readable name you set can be changed afterwards, but the project ID remains unchanged throughout the life of the project.
-
+Now you can create a new project. Remember that the project will be assigned an ID which consists of your username and the project’s shortname, which is created from the name you gave it through ``setName()`` (e.g. ``rfranklin/new-test-project``).  The human readable name you set can be changed afterwards, but the project ID remains unchanged throughout the life of the project.
+::
     Project newProject = client.instantiate(Project.class);
     newProject.setName("New test project")
         .setDescription("This is a project created through V2 API")
@@ -122,49 +122,50 @@ Now you can create a new project. Remember that the project will be assigned an 
     log.info("Created new project with name '{}' and project id '{}'", newProject.getName(), newProject.getId());
 
 
-
 Managing project members
+========================
+
 Sometimes it can feel lonely to be the only person in the project. You can add other users as members of your projects and assign them permissions as necessary. You will need to know their usernames on the platform.
 
 The read permission is assigned by default to each project member and cannot be stripped. Other permissions are modifiable. Learn more about permissions.
 
-First we instantiate a new project member and then provide the username of the person we want to add and set the necessary permissions. After that we add the user to the desired project.
+First we instantiate a new project member and then provide the username of the person we want to add and set the necessary permissions. After that we add the user to the desired project::
 
-Member newMember = client.instantiate(Member.class);
-newMember
-  // must be an existing user!
-  .setUsername("annemarie.jones")
-  .setPermissions(Members.getDefaultPermissions());
-currentProject.addMember(newMember);
+  Member newMember = client.instantiate(Member.class);
+  newMember
+    // must be an existing user!
+    .setUsername("annemarie.jones")
+    .setPermissions(Members.getDefaultPermissions());
+  currentProject.addMember(newMember);
 
-If you need to remind yourself of who has which permissions on your project, you can iterate through the list of the project members.
+If you need to remind yourself of who has which permissions on your project, you can iterate through the list of the project members::
 
-MemberList members = currentProject.getMembers();
-Iterator<Member> memberIterator = members.iterator();
-System.out.println("Members of the project " + currentProject.getId());
-while (memberIterator.hasNext()) {
-  Member currMember = memberIterator.next();
-  log.info(" Username : {} Permissions : {}",
-  currMember.getUsername(),
-  currMember.getPermissions());
-}
+  MemberList members = currentProject.getMembers();
+  Iterator<Member> memberIterator = members.iterator();
+  System.out.println("Members of the project " + currentProject.getId());
+  while (memberIterator.hasNext()) {
+    Member currMember = memberIterator.next();
+    log.info(" Username : {} Permissions : {}",
+    currMember.getUsername(),
+    currMember.getPermissions());
+  }
 
-Sometimes, you might want to change permissions of a certain member. Let's give our user the right to modify (the write permission) and download (the copy permission) files from our common project.
+Sometimes, you might want to change permissions of a certain member. Let's give our user the right to modify (the write permission) and download (the copy permission) files from our common project::
 
-Map<String, Boolean> permissions = newMember.getPermissions();
-permissions.put("write", true);
-permissions.put("copy", true);
-newMember.setPermissions(permissions);
-newMember.save();
+  Map<String, Boolean> permissions = newMember.getPermissions();
+  permissions.put("write", true);
+  permissions.put("copy", true);
+  newMember.setPermissions(permissions);
+  newMember.save();
 
-Now, if you want to see the updated list of members and permissions, remember to reload it.
+Now, if you want to see the updated list of members and permissions, remember to reload it::
 
-members.reload();
-for (Member member : members) {
-  log.info(" Username : {} Permissions : {}", member.getUsername(),
-  member.getPermissions());
-}
+  members.reload();
+  for (Member member : members) {
+    log.info(" Username : {} Permissions : {}", member.getUsername(),
+    member.getPermissions());
+  }
 
-Finally, once your collaboration comes to an end, you can easily remove the member from the project.
+Finally, once your collaboration comes to an end, you can easily remove the member from the project::
 
-currentProject.removeMember(newMember.getUsername());
+  currentProject.removeMember(newMember.getUsername());
