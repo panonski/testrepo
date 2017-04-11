@@ -446,7 +446,7 @@ To check which apps are currently in your project, call::
 
   AppList destProjectApps = destProject.getApps();
 
-Finally, if you have a JSON file which describes your app `through CWL<http://docs.sevenbridges.com/docs/sdk-overview#section-the-common-workflow-language>`_, you can use it to install the app in a project::
+Finally, if you have a JSON file which describes your app `through CWL <http://docs.sevenbridges.com/docs/sdk-overview#section-the-common-workflow-language>`_, you can use it to install the app in a project::
 
   try {
     String raw = new String(Files.readAllBytes(Paths.get("my-app-raw.json")));
