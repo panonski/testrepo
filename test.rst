@@ -52,8 +52,5 @@ This is a paragraph inside the third thing.
 
   This is a paragraph inside the third thing.
 
-Python_ is `my favourite
-programming language`__.
-.. _Python: http://www.python.org/
-
-__ Python_
+  External hyperlinks, like Python_.
+  .. _Python: http://www.python.org/
