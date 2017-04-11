@@ -7,7 +7,7 @@ This guide walks you through everything you need to get started with the Seven B
 .. contents::
    :local:
    :depth: 2
-   
+
 Authentication and Configuration
 ================================
 To start, you need to authenticate with the API by passing your authentication token and the API endpoint you will be interacting with.
@@ -536,13 +536,14 @@ We'll analyze data that is hosted in the `Cancer Cell Line Encyclopedia (CCLE) <
 - G30603.TUHR4TKB.1.bam
 - G28034.MDA-MB-361.1.bam
 
-``
+::
+
   FileList inputCcleFiles = user.getProjectById("sevenbridges/cancer-cell-line-encyclopedia-ccle-1")
         .getFiles(Files.criteria()
         .withName("G30630.VM-CUB1.3.bam")
         .withName("G30603.TUHR4TKB.1.bam")
         .withName("G28034.MDA-MB-361.1.bam"));
-``
+
 The next step is to copy the files into our project::
 
   List<File> inputFiles = new ArrayList<>(3);
