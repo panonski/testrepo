@@ -130,7 +130,7 @@ Managing project members
 
 Sometimes it can feel lonely to be the only person in the project. You can add other users as members of your projects and assign them permissions as necessary. You will need to know their usernames on the platform.
 
-The `read` permission is assigned by default to each project member and cannot be stripped. Other permissions are modifiable. You can learn more about permissions `here <http://docs.sevenbridges.com/v1.0/docs/set-permissions>`_.
+The ``read`` permission is assigned by default to each project member and cannot be stripped. Other permissions are modifiable. You can learn more about permissions `here <http://docs.sevenbridges.com/v1.0/docs/set-permissions>`_.
 
 First we instantiate a new project member and then provide the username of the person we want to add and set the necessary permissions. After that we add the user to the desired project::
 
@@ -190,7 +190,7 @@ You can check what files are currently in your project by iterating through a li
 
 If you are starting from an empty project, one way to get going is to copy some of the public files into your project. You can utilize the file tags to find the files you need. The tags are keywords or strings that make it easier to identify and organize files you’ve imported from public datasets.
 
-*Learn more about `public files <http://docs.sevenbridges.com/v1.0/docs/file-repositories>`_ or `tagging your files <http://docs.sevenbridges.com/docs/tag-your-files>`_.*
+Learn more about `public files <http://docs.sevenbridges.com/v1.0/docs/file-repositories>`_ or `tagging your files <http://docs.sevenbridges.com/docs/tag-your-files>`_.
 
 Let’s say you want to copy all the files that are related to human genome version 19. They will be tagged with the ``hg19`` tag::
 
