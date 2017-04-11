@@ -130,7 +130,7 @@ Managing project members
 
 Sometimes it can feel lonely to be the only person in the project. You can add other users as members of your projects and assign them permissions as necessary. You will need to know their usernames on the platform.
 
-*The `read` permission is assigned by default to each project member and cannot be stripped. Other permissions are modifiable. Learn more about `permissions <http://docs.sevenbridges.com/v1.0/docs/set-permissions>`_.*
+The `read` permission is assigned by default to each project member and cannot be stripped. Other permissions are modifiable. You can learn more about permissions `here <http://docs.sevenbridges.com/v1.0/docs/set-permissions>`_.
 
 First we instantiate a new project member and then provide the username of the person we want to add and set the necessary permissions. After that we add the user to the desired project::
 
