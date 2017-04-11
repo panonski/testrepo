@@ -4,6 +4,10 @@ SevenBridges Java client for public API Quickstart
 
 This guide walks you through everything you need to get started with the Seven Bridges API Java client.
 
+.. contents::
+   :local:
+   :depth: 2
+   
 Authentication and Configuration
 ================================
 To start, you need to authenticate with the API by passing your authentication token and the API endpoint you will be interacting with.
