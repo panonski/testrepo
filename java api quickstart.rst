@@ -86,7 +86,7 @@ Managing projects
 =================
 Projects are the core building blocks of our Platform. All the analyses you design and run take place inside a project. Here are some basic methods for dealing with them.
 
-If you are not familiar with the project structure of the Seven Bridges Platform and CGC, take a look at their respective documentation: `projects on the CGC <http://docs.cancergenomicscloud.org/docs/projects-on-the-cgc>`_ and `projects on the Seven Bridges Platform<http://docs.sevenbridges.com/docs/projects-on-the-platform>`_. `Python home page <http://www.python.org>`_
+If you are not familiar with the project structure of the Seven Bridges Platform and CGC, take a look at their respective documentation: `projects on the CGC <http://docs.cancergenomicscloud.org/docs/projects-on-the-cgc>`_ and `projects on the Seven Bridges Platform<http://docs.sevenbridges.com/docs/projects-on-the-platform>`_ . 
 
 To list all the projects that you are a member of, call::
 
