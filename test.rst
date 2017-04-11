@@ -28,17 +28,17 @@ Titles are targets, too
 =======================
 Implicit references, like `Titles are targets, too`_.
 
-1. This is the first thing.
+**1. This is the first thing.**
 
 |
 
-2. This is the second thing.
+**2. This is the second thing.**
 
 |
 
-3. This is the third thing.
+**3. This is the third thing.**
 
-  This is a paragraph inside the third thing.
+This is a paragraph inside the third thing.
 
 1. This is the first thing.
 
