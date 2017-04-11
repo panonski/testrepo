@@ -190,7 +190,7 @@ You can check what files are currently in your project by iterating through a li
 
 If you are starting from an empty project, one way to get going is to copy some of the public files into your project. You can utilize the file tags to find the files you need. The tags are keywords or strings that make it easier to identify and organize files you’ve imported from public datasets.
 
-Learn more about `public files <http://docs.sevenbridges.com/v1.0/docs/file-repositories>`_ or `tagging your files <http://docs.sevenbridges.com/docs/tag-your-files>`_.
+You can learn more about `public files <http://docs.sevenbridges.com/v1.0/docs/file-repositories>`_ or `tagging your files <http://docs.sevenbridges.com/docs/tag-your-files>`_.
 
 Let’s say you want to copy all the files that are related to human genome version 19. They will be tagged with the ``hg19`` tag::
 
@@ -216,7 +216,7 @@ Tags can be applied to mark files in any way you find useful. Let’s say you de
 
 All files have associated metadata which makes them searchable, keeping your file collection manageable as it grows. It also enables you group files properly for analyses.
 
-*Learn more about `metadata <http://docs.sevenbridges.com/v1.0/docs/metadata-on-the-seven-bridges-platform>`_.*
+You can learn more about metadata `here <http://docs.sevenbridges.com/v1.0/docs/metadata-on-the-seven-bridges-platform>`_.
 
 When you need to change metadata on a file, you should first obtain the file's ID. Then you can either patch the file metadata (adding new and-or changing existing metadata fields) or you can overwrite it (which means any metadata fields you do not explicitly reset will be deleted).
 
