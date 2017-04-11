@@ -201,7 +201,7 @@ Let’s say you want to copy all the files that are related to human genome vers
   log.info(" There are {} files in destination project after copy", destinationProject.getFiles().getSize());
 
 
-Tags can be applied to mark files in any way you find useful. Let’s say you decided you will not use files from a certain project anymore, but do not want to delete them until someone else has checked out your project. You can then use tags to mark the files as ready for deletion.
+Tags can be applied to mark files in any way you find useful. Let’s say you decided you will not use files from a certain project anymore, but do not want to delete them until someone else has checked out your project. You can then use tags to mark the files as ready for deletion::
 
   FileList destinationFiles = destinationProject.getFiles();
   Iterator<File> iterator = destinationFiles.iterator();
@@ -400,3 +400,309 @@ On some occasions your app (or an external factor) might need to abort an upload
 Once you have uploaded all the files you needed, it’s time to close the ``TransferService`` to make sure you gracefully shutdown daemon threads and release resources::
 
   user.shutdownTransferService();
+
+Managing apps
+=============
+
+The concept of apps on the platform includes both the **tools** (individual bioinformatics utilities) and the **workflows** (chains or pipelines of connected tools), either previously existing or user-created. In the section, we will see how to get information about publicly available apps, to check which apps are currently in a given project and how to install a new app based on a pre-formatted JSON file.
+
+Getting information about publicly available apps is simple.	The following excerpt shows you how to get the name and the ID. You will need to know the ID of an app in order to work further with it::
+
+  AppList publicApps = user.getPublicApps();
+  log.info("There are {} public apps", publicApps.getSize());
+  for (App publicApp : publicApps) {
+    log.info("App id {} name {}", publicApp.getId(), publicApp.getName());
+  }
+
+If you want to use a certain app inside your project, you can copy it into the project.
+
+If you try to copy an app that already exists in the given project, the API will issue an error message, which you can use to take appropriate action and inform the user as necessary.
+
+Here is `the list of API status codes and descriptions<http://docs.sevenbridges.com/reference#api-status-codes>`_.
+::
+  Project destProject = user.getProjectById(String.format("%s/destination-project", user.getUsername()));
+  App appToCopy = user.getAppById("admin/sbg-public-data/fastqc-analysis/2");
+
+      // copy action will fail if there is already app with same id in the project
+      App copiedApp;
+      try {
+        copiedApp = appToCopy.copy(destProject);
+      } catch (ResourceException e) {
+        log.debug("Error while trying to copy app - " + e.toString());
+        if (e.getStatus() == 409) { // CONFLICT, app with same ID already exists in project
+          copiedApp = user.getAppById(String.format("%s/fastqc-analysis", destProject.getId()));
+          log.info("App already exists in destination project, with id {}", copiedApp.getId());
+        } else {
+          log.error("Error while getting app by id, expected success code or 409 HTTP status, got {}", e.getMessage());
+          throw e;
+        }
+      }
+
+
+To check which apps are currently in your project, call::
+
+  AppList destProjectApps = destProject.getApps();
+
+Finally, if you have a JSON file which describes your app through CWL, you can use it to install the app in a project::
+
+  try {
+    String raw = new String(Files.readAllBytes(Paths.get("my-app-raw.json")));
+        destProject.installApp("my-installed-app", raw);
+  } catch (IOException e) {
+    log.error("Error while reading file 'my-app-raw.json', {}", e);
+  }
+
+
+Managing tasks
+==============
+
+An app execution is called a task. Each task is associated with a set of input files and chosen settings for the tool(s) in the app. In this part, we will see how to copy files that satisfy certain criteria, copy a relevant app into the project and build a task. We will see how to poll for task status during execution and how to get other useful information about a task.
+
+In order to create a new task, you can create a ``taskBuilder`` and set its fields appropriately. Let’s say you want to index a FASTA file with our public app ``SAMtools Index FASTA``::
+
+  // find a fasta file from public repo and copy it to your project
+  File fastaFile = user.getProjectById("admin/sbg-public-data")          .getFiles(Files.criteria().withName("HG19_Broad_variant.fasta"))
+              .single();
+
+  Project tasksProject  = user.getProjectById(String.format("%s/task-test", user.getUsername()));
+
+  File input = fastaFile.copy(tasksProject);
+
+  // copy the app to the project
+  App sourceApp =
+  user.getAppById("admin/sbg-public-data/samtools-index-fasta-1-3");
+
+  App myApp = sourceApp.copy(tasksProject);
+
+  TaskRequestFactory taskFactory = user.getTaskRequestFactory();
+  CreateTaskRequestBuilder taskBuilder = taskFactory.createTaskBuilder();
+  taskBuilder.setApp(myApp)
+    .setDescription("run from public API v2")
+    .setName("API_task_samtools")
+    .setProject(tasksProject)
+    .addInput("input_fasta_file", input)
+  // to run immediately after task creation
+    .runNow(true);
+
+  Task task = user.createTask(taskBuilder.build());
+
+When the task is executed successfully, its status will change to ``COMPLETED``. Until that happens, you can occasionally poll its status. (Just bear in mind that each check of the status fires up an API request so it shouldn’t be done every second :)
+::
+  while (!TaskStatus.isFinished(task.getStatus())) {
+    try {
+      Thread.sleep(30_000);
+    } catch (InterruptedException e) {
+      log.error("Interrupted from sleep, but task job {} is not finished yet", task.getId());
+      throw new RuntimeException(e);
+    }
+    task.reload();
+  }
+
+If you want to check which tasks have completed, you can use their status as a search criterion.
+You can also get other information about each task, e.g. its name, inputs and outputs::
+
+  TaskList tasks =   user.getTasks(Tasks.criteria().withStatus(TaskStatus.COMPLETED)); log.info("List of completed tasks for current user");
+  for (Task completedTasks : tasks) {
+     log.info("  Task name: {}", task.getName());
+     log.info("    Inputs: {}", task.getInputs());
+     log.info("    Outputs: {}", task.getOutputs());
+  }
+
+
+Batch tasks
+===========
+
+Sometimes you will need to run identical analyses on different data. You can do so through `batching<http://docs.sevenbridges.com/perform-batch-analysis>`_, where you enter multiple input files and group them by specified metadata criteria.
+
+This segment on batch tasks follows `this API tutorial<http://docs.sevenbridges.com/reference#api-batch-tutorial>`_, which contains more detailed information. Here we will focus on implementing a batch task using our Java library. We will see how to set up a batch analysis in which we align reads based on their sample metadata. We will see how to copy input and reference files as well as the relevant apps into the project and then create a task and check for errors during creation of the task. We will also show how to check the status of the task while it is running and how to collect the output files once the task is completed.
+
+Previously, we have discussed creating a project so we will assume that you have a project with a short name “batch-test” in which you want to perform the batch analysis::
+
+  Project batchProject = user.getProjectById(String.format("%s/batch-test", user.getUsername()));
+
+We'll analyze data that is hosted in the `Cancer Cell Line Encyclopedia (CCLE)<http://docs.sevenbridges.com/ccle>`_ public project on the Seven Bridges Platform. The CCLE public project is specified by the ID of `sevenbridges/cancer-cell-line-encyclopedia-ccle-1`.  Inside it, we want to find BAM files with an experimental strategy of RNA-Seq. It is possible to filter by metadata fields to retrieve files with certain properties. In this tutorial, however, we already know that we want to find the following three files:
+
+- G30630.VM-CUB1.3.bam
+- G30603.TUHR4TKB.1.bam
+- G28034.MDA-MB-361.1.bam
+
+::
+  FileList inputCcleFiles = user.getProjectById("sevenbridges/cancer-cell-line-encyclopedia-ccle-1")
+    .getFiles(Files.criteria()
+       .withName("G30630.VM-CUB1.3.bam")
+       .withName("G30603.TUHR4TKB.1.bam")
+       .withName("G28034.MDA-MB-361.1.bam"));
+
+The next step is to copy the files into our project::
+
+  List<File> inputFiles = new ArrayList<>(3);
+  for (File file : inputCcleFiles) {
+    File copy = file.copy(batchProject);
+    inputFiles.add(copy);
+  }
+
+Many bioinformatics tools require certain data, such as reference genomes or annotation files, to execute properly. Seven Bridges maintains a collection of the latest and most frequently used reference genomes and annotation files in the Public Reference Files repository. The Seven Bridges Public Reference Files repository is specified in the same way as a project on the Platform by an id of `admin/sbg-public-data`.
+
+For this analysis, we need to supply the workflow with the following two reference files:
+
+- HG19_Broad_variant.fasta
+- Homo_sapiens.GRCh37.75.gtf
+::
+  FileList inputPublicFiles = user.getPublicFiles(Files.criteria()
+    .withName("HG19_Broad_variant.fasta")
+    .withName("Homo_sapiens.GRCh37.75.gtf"));
+  for (File file : inputPublicFiles) {
+     file.copy(batchProject);
+  }
+
+
+Next, we need to copy the RNA-seq Alignment STAR app from the list of public apps. Check here how to obtain the ID of the app::
+
+  App appToCopy = user.getAppById("admin/sbg-public-data/rna-seq-alignment-star/16
+  ");
+  App appRnaSeqAlign = appToCopy.copy(batchProject);
+
+
+At this point, we need to edit the app so that it can accept the BAM files we copied as input. You can do it by editing its CWL or via the visual interface. `Here are the instructions<http://docs.sevenbridges.com/reference#section-5c-modify-a-workflow-on-the-visual-interface>`_ for using Workflow editor on the visual interface.
+
+After the app is edited, we can build the task and set appropriate fields::
+
+    TaskRequestFactory taskFactory = user.getTaskRequestFactory();
+    CreateTaskRequestBuilder taskBuilder = taskFactory.createTaskBuilder();
+    taskBuilder
+        .setApp(appRnaSeqAlign)
+        .setDescription("run from public API v2 with batch")
+        .setName("Batch run RNA seq - api client java")
+        .setProject(batchProject)
+        // the input port on which you wish to batch
+        .setBatchInput("input_file")
+        .addBatchBy("CRITERIA", java.util.Collections.singletonList("metadata.sample_id"))
+        .addInput("input_file", inputFiles.toArray(new File[0]))
+        .addInput("reference_or_index", batchProject.getFiles(Files.criteria().withName("HG19_Broad_variant.fasta")).single())
+        .addInputAsSingletonList("sjdbGTFfile", batchProject.getFiles(Files.criteria().withName("Homo_sapiens.GRCh37.75.gtf")).single())
+    .runNow(true);
+
+Since we set the ``runNow`` parameter to true, the task will run as soon as we create it. If you leave out this field, the task will be created and stay in `DRAFT` status until you call ``run()`` on it.
+::
+  //creates and runs the task, since runNow is true
+  Task task = user.createTask(taskBuilder.build());
+
+If task runs into errors during creation, they will be attached to the task object::
+
+    List<Map<String, Object>> errors = task.getErrors();
+    if (errors != null && errors.size() > 0) {
+      log.error("Error while validating task with id {}", task.getId());
+      for (Map<String, Object> error : errors) {
+        log.error("    {}", error);
+      }
+    }
+
+While the task is being executed, you can occasionally check its status. You will also be notified by email once your task is completed.
+::
+ while (!TaskStatus.isFinished(task.getStatus())) {
+        log.info("Sleeping");
+        try {
+          Thread.sleep(30_000);
+        } catch (InterruptedException e) {
+          Thread.interrupted();
+          log.error("Interrupted while waiting for task to finish");
+          throw new RuntimeException(e);
+        }
+        task.reload();
+        log.info("Current status {}", task.getStatus().toString());
+  }
+
+
+When the task is completed, you can obtain the list of files that make up its output. Or you can get information about the task status::
+
+  if (TaskStatus.COMPLETED.equals(task.getStatus())) {
+      FileList producedFiles = batchProject.getFiles(Files.criteria().withTaskOrigin(task));
+      for (File producedFile : producedFiles) {
+        log.info("Produced file name {} and id {}", producedFile.getName(), producedFile.getId());
+      }
+  } else {
+    log.warn("Task is finished, but with status {}", task.getStatus());
+  }
+
+
+Managing volumes
+================
+
+Volumes authorize the Platform to access and query objects on a specified cloud storage (S3 - `Amazon Web Services<http://docs.sevenbridges.com/docs/aws-cloud-storage-tutorial>`_ or GCS - `Google Cloud Storage<http://docs.sevenbridges.com/docs/google-cloud-storage-tutorial>`_) on your behalf. We will examine setting up a volume on each of the services, listing your volumes, importing and exporting files and polling for an import or export status while waiting for a job to finish.
+
+The S3 and GCS volumes each have their own builder. Before you can use them, you will need to set up the `AWS_ACCESS_KEY` and the `AWS_SECRET_KEY` for S3 or the `GCS_PRIVATE_KEY` for the GCS. Then an approapriate builder can be used to create a volume.
+
+Here is the S3 example::
+
+    CreateS3VolumeRequestBuilder s3Builder = user.getVolumeRequestFactory().s3Builder();
+    s3Builder
+        .setName("my_new_S3_volume_for_test")
+        .setAccessMode(AccessMode.RW)
+        .setAccessKey(AWS_ACCESS_KEY)
+        .setSecretKey(AWS_SECRET_KEY)
+        .setBucket("outer_user_test_bucket")
+        .setDescription("S3 Volume for testing imports and exports from and to external (non sbg) S3 bucket")
+        .setSseAlgorithm("AES256");
+    Volume testVolume = user.createVolume(s3Builder.build());
+
+
+This is the corresponding GCS example::
+
+    CreateGcsVolumeRequestBuilder gcsBuilder = user.getVolumeRequestFactory().gcsBuilder();
+      gcsBuilder
+        .setName("my_new_GCS_volume_for_test")
+        .setAccessMode(AccessMode.RO) //only read mode for GCS
+        .setBucket("outer_user_GCS_import")
+        .setClientEmail(CLIENT_GOOGLE_EMAIL)
+        .setPrivateKey("-----BEGIN PRIVATE KEY-----"+ GCS_PRIVATE_KEY + "-----END PRIVATE KEY-----\\n");
+    Volume gcsVolume = user.createVolume(gcsBuilder.build());
+
+Each file is imported using an import job. Once you have created it, you can refer to it by its ID::
+
+    ImportJob gcsImportJob = user.startImport(gcsVolume, "files/google_file_key", destProject, "gcs_file", false);
+    log.info("GCS volume import id : {}", gcsImportJob.getId());
+
+If you have a list of import jobs (called `imports` in this example), you can poll for their status occasionally, until they are all finished::
+
+    int finishedCnt = 0;
+    while (finishedCnt < imports.size()) {
+      try {
+        Thread.sleep(5000);
+        Iterator<ImportJob> iterator = imports.iterator();
+        while (iterator.hasNext()) {
+          ImportJob next = iterator.next();
+          next.reload();
+          if (VolumeJobState.isFinished(next.getState())) {
+            log.info("Volume import id : {} name {} done", next.getId(), next.getDestinationName());
+            finishedCnt++;
+            iterator.remove();
+          }
+        }
+      } catch (Exception e) {
+        log.error(" Error while waiting for imports to finish - {}", e.getMessage());
+        break;
+      }
+    }
+
+
+To export a file, refer to it by its ID and create an export job::
+
+    File fileToExport = user.getFileById("584d6f160b2a10069e40d5d");
+    ExportJob exportJob = user.startExport(fileToExport, testVolume, "exported-file", false);
+
+Similarly to imports, you can check on the status of your export job occasionally::
+
+    try {
+      while (!VolumeJobState.isFinished(exportJob.getState())) {
+        Thread.sleep(5000);
+        exportJob.reload();
+      }
+    } catch (Exception e) {
+      log.error(" Error while waiting for export to finish = {}", e.getMessage());
+    }
+
+    if (VolumeJobState.COMPLETED.equals(exportJob.getState())) {
+      log.info("Volume export with id {} is completed successfully", exportJob.getId());
+    } else {
+      log.warn("Volume export with id {} failed", exportJob.getId());
+    }
