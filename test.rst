@@ -52,5 +52,6 @@ This is a paragraph inside the third thing.
 
   This is a paragraph inside the third thing.
 
-  External hyperlinks, like Python_.
-  .. _Python: http://www.python.org/
+  See the `Python home page <http://www.python.org>`_ for info.
+
+  This `link <Python home page_>`_ is an alias to the link above.
