@@ -86,7 +86,7 @@ Managing projects
 =================
 Projects are the core building blocks of our Platform. All the analyses you design and run take place inside a project. Here are some basic methods for dealing with them.
 
-If you are not familiar with the project structure of the Seven Bridges Platform and CGC, take a look at their respective documentation: `projects on the CGC <http://docs.cancergenomicscloud.org/docs/projects-on-the-cgc>`_ and `projects on the Seven Bridges Platform <http://docs.sevenbridges.com/docs/projects-on-the-platform>`_.
+If you are not familiar with the project structure of the Seven Bridges Platform and CGC, take a look at their respective documentation: `projects on the CGC<http://docs.cancergenomicscloud.org/docs/projects-on-the-cgc>`_ and `projects on the Seven Bridges Platform<http://docs.sevenbridges.com/docs/projects-on-the-platform>`_.
 
 To list all the projects that you are a member of, call::
 
@@ -111,7 +111,7 @@ Each project also has a name, a description string indicating its use, a type, s
 
 To create a new project, you need to provide its name and the billing group ID.
 
-The billing group ID designates which funding resource to charge for the analyses you run in the project you're about to create. Learn more about `billing groups <http://docs.sevenbridges.com/v1.0/docs/payments#section-billing-groups>`_.
+The billing group ID designates which funding resource to charge for the analyses you run in the project you're about to create. Learn more about `billing groups<http://docs.sevenbridges.com/v1.0/docs/payments#section-billing-groups>`_.
 ::
  BillingGroupList billingGroups = user.getBillingGroups();
  firstBillingGroup = billingGroups.iterator().next().getId();
