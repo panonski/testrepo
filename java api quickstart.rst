@@ -29,17 +29,13 @@ The following locations will be each be checked in the following order:
 
 #. The classpath of the java application which uses this client library.
 
-|
-
 #. Environment variables SB_API_ENDPOINT and SB_AUTH_TOKEN.
 
+#. Common configuration file with the defined parameters.
+
+|It is located at: Linux, Mac OS X: **$HOME/.sevenbridges/credentials**
 |
-
-#. Common configuration file with the defined parameters. It is located at:
-
-Linux, Mac OS X: **$HOME/.sevenbridges/credentials**
-
-MS Windows: **%UserProfile%\.sevenbridges\\credentials**
+|MS Windows: **%UserProfile%\.sevenbridges\\credentials**
 
 This is a special credentials file that may be shared with other Seven Bridges client applications, so you should specify only these two keys in it (if any). If you have more than one profile, you can store the information for each profile in it.  For example::
 
