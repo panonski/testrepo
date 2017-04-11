@@ -27,15 +27,15 @@ Once you have obtained your authentication token from one of the URLs listed abo
 If you do not pass any other parameters, the builder will automatically attempt to find your API key values in a number of default/conventional locations and then use the discovered values.
 The following locations will be each be checked in the following order:
 
-1. The classpath of the java application which uses this client library.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-|
-
-**2. Environment variables SB_API_ENDPOINT and SB_AUTH_TOKEN.**
+#. The classpath of the java application which uses this client library.
 
 |
 
-**3. Common configuration file with the defined parameters. It is located at:**
+#. Environment variables SB_API_ENDPOINT and SB_AUTH_TOKEN.
+
+|
+
+#. Common configuration file with the defined parameters. It is located at:
 
 Linux, Mac OS X: **$HOME/.sevenbridges/credentials**
 
@@ -51,7 +51,7 @@ This is a special credentials file that may be shared with other Seven Bridges c
   auth_token = 1e43fEXampLEa5523dfd14exAMPle3e5
   api_url = https://api.sbgenomics.com/v2
 
-4. Library-specific configuration file sevenbridges.properties which contains the same keys as above, located at:
+#. Library-specific configuration file sevenbridges.properties which contains the same keys as above, located at:
 Linux, Mac OS X: $HOME/.sevenbridges/sevenbridges-java/
 MS Windows: %UserProfile%/.sevenbridges/sevenbridges-java/
 
